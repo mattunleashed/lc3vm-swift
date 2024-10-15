@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "5E9953A5-3962-44ED-B11A-A4B5133E04C2",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "maximumTestRepetitions" : 10,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:",
+      "identifier" : "lc3vm",
+      "name" : "lc3vm"
+    },
+    "testRepetitionMode" : "fixedIterations"
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "lc3vmTests",
+        "name" : "lc3vmTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [
+                "Programs/2048.obj"
+            ],
+            "cwd": "${workspaceFolder:lc3vm}",
+            "name": "Debug lc3vm",
+            "program": "${workspaceFolder:lc3vm}/.build/debug/lc3vm",
+            "preLaunchTask": "swift: Build Debug lc3vm"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "args": [
+                "Programs/2048.obj"
+            ],
+            "cwd": "${workspaceFolder:lc3vm}",
+            "name": "Release lc3vm",
+            "program": "${workspaceFolder:lc3vm}/.build/release/lc3vm",
+            "preLaunchTask": "swift: Build Release lc3vm"
+        }
+    ]
+}
