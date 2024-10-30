@@ -8,6 +8,7 @@
 import ArgumentParser
 import Foundation
 
+/// The LC-3 virtual machine.
 @main
 @available(macOS 12, *) // https://forums.swift.org/t/asyncparsablecommand-doesnt-work/71300
 @MainActor
@@ -16,8 +17,8 @@ struct LC3VM: AsyncParsableCommand {
     var binary: URL
 
     func run() async throws {
+        // Read the binary file and load it into memory
         try Hardware.readImage(binary)
-        // URL(fileURLWithPath: "/Users/ibrahim/Developer/Apple/lc3vm/Programs/2048.obj")
 
         signal(SIGINT) { handle_interrupt($0) }
         disable_input_buffering()
@@ -73,6 +74,7 @@ struct LC3VM: AsyncParsableCommand {
     }
 }
 
+/// The error type for the LC3 virtual machine.
 enum LC3VMError: Error {
     case badOpcode
     case invalidInstruction
@@ -81,6 +83,7 @@ enum LC3VMError: Error {
     case unableToReadImageFile
 }
 
+/// The LC-3 constant values.
 enum Constant {
     static let memorySize = 1 << 16
     static let registerCount = 10
