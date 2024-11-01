@@ -9,6 +9,7 @@ import Foundation
 
 // MARK: - Operation Protocol
 
+/// Represents an operation that can be executed by the LC-3 virtual machine.
 @MainActor
 protocol Operation {
     static var opcode: Opcode { get }
@@ -24,10 +25,15 @@ extension Operation {
     }
 }
 
-// MARK: - Instructions
+// MARK: - Operations
 
-// Implement instructions using this manual: https://www.jmeiners.com/lc3-vm/supplies/lc3-isa.pdf
+// Implement operations using this manual: https://www.jmeiners.com/lc3-vm/supplies/lc3-isa.pdf
 
+/// Represents the ADD instruction.
+/// Adds the values of two registers or a register and an immediate value.
+/// - If the instruction is in immediate mode, the value of the source register is added to the immediate value.
+/// - If the instruction is in register mode, the values of the two source registers are added.
+/// The result is stored in the destination register, and the condition flags are updated based on the result.
 struct ADD: Operation {
     static let opcode = Opcode.add
 
@@ -51,6 +57,11 @@ struct ADD: Operation {
     }
 }
 
+/// Represents the AND instruction.
+/// Performs a bitwise AND on the values of two registers or a register and an immediate value.
+/// - If the instruction is in immediate mode, the value of the source register is ANDed with the immediate value.
+/// - If the instruction is in register mode, the values of the two source registers are ANDed.
+/// The result is stored in the destination register, and the condition flags are updated based on the result.
 struct AND: Operation {
     static let opcode: Opcode = .and
 
@@ -74,6 +85,10 @@ struct AND: Operation {
     }
 }
 
+/// Represents the BR instruction.
+/// Branches to a new location if the condition flags match.
+/// - The program counter is updated with the offset if the condition flags match the specified condition.
+/// This allows for conditional branching in the program.
 struct BR: Operation {
     static let opcode: Opcode = .br
 
@@ -91,6 +106,10 @@ struct BR: Operation {
     }
 }
 
+/// Represents the JMP instruction.
+/// Jumps to the address contained in a base register.
+/// - The program counter is updated with the value of the base register.
+/// This allows for unconditional jumps in the program.
 struct JMP: Operation {
     static let opcode: Opcode = .jmp
 
@@ -104,6 +123,11 @@ struct JMP: Operation {
     }
 }
 
+/// Represents the JSR instruction.
+/// Jumps to a subroutine.
+/// - The return address is stored in register R7.
+/// - The program counter is updated with the offset or the value of the base register.
+/// This allows for calling subroutines and returning to the caller.
 struct JSR: Operation {
     static let opcode: Opcode = .jsr
 
@@ -125,6 +149,10 @@ struct JSR: Operation {
     }
 }
 
+/// Represents the LD instruction.
+/// Loads a value from memory into a register.
+/// - The value at the memory address specified by the program counter and offset is loaded into the destination register.
+/// The condition flags are updated based on the loaded value.
 struct LD: Operation {
     static let opcode: Opcode = .ld
 
@@ -142,6 +170,10 @@ struct LD: Operation {
     }
 }
 
+/// Represents the LDI instruction.
+/// Loads a value indirectly from memory into a register.
+/// - The value stored in memory at this computed address is the address of the data to be loaded into the destination register.
+/// The condition flags are updated based on the loaded value.
 struct LDI: Operation {
     static let opcode = Opcode.ldi
 
@@ -162,6 +194,10 @@ struct LDI: Operation {
     }
 }
 
+/// Represents the LDR instruction.
+/// Loads a value from memory into a register using a base register and an offset.
+/// - The value at the memory address specified by the base register and offset is loaded into the destination register.
+/// The condition flags are updated based on the loaded value.
 struct LDR: Operation {
     static let opcode: Opcode = .ldr
 
@@ -182,6 +218,10 @@ struct LDR: Operation {
     }
 }
 
+/// Represents the LEA instruction.
+/// Loads the effective address into a register.
+/// - The effective address specified by the program counter and offset, the address, is loaded into the destination register.
+/// The condition flags are updated based on the loaded value.
 struct LEA: Operation {
     static let opcode: Opcode = .lea
 
@@ -197,6 +237,10 @@ struct LEA: Operation {
     }
 }
 
+/// Represents the NOT instruction.
+/// Performs a bitwise NOT on the value of a register.
+/// - The value of the source register is bitwise negated and stored in the destination register.
+/// The condition flags are updated based on the result.
 struct NOT: Operation {
     static let opcode: Opcode = .not
 
@@ -211,6 +255,9 @@ struct NOT: Operation {
     }
 }
 
+/// Represents the RES instruction.
+/// Reserved for future use.
+/// - This instruction is currently unused and reserved for future use.
 struct RES: Operation {
     static let opcode: Opcode = .res
 
@@ -220,6 +267,9 @@ struct RES: Operation {
     }
 }
 
+/// Represents the RTI instruction.
+/// Returns from an interrupt.
+/// - This instruction is currently unused.
 struct RTI: Operation {
     static let opcode: Opcode = .rti
 
@@ -229,6 +279,9 @@ struct RTI: Operation {
     }
 }
 
+/// Represents the ST instruction.
+/// Stores a value from a register into memory.
+/// - The value of the destination register is stored at the memory address specified by the program counter and offset.
 struct ST: Operation {
     static let opcode: Opcode = .st
 
@@ -242,6 +295,9 @@ struct ST: Operation {
     }
 }
 
+/// Represents the STI instruction.
+/// Stores a value indirectly from a register into memory.
+/// - The value in the source register is stored at the memory address found at another memory address.
 struct STI: Operation {
     static let opcode: Opcode = .sti
 
@@ -258,6 +314,9 @@ struct STI: Operation {
     }
 }
 
+/// Represents the STR instruction.
+/// Stores a value from a register into memory using a base register and an offset.
+/// - The value of the destination register is stored at the memory address specified by the base register and offset.
 struct STR: Operation {
     static let opcode: Opcode = .str
 
@@ -272,6 +331,10 @@ struct STR: Operation {
     }
 }
 
+/// Represents the TRAP instruction.
+/// Executes a trap routine.
+/// - The return address is stored in register R7.
+/// - The trap routine specified by the trap code is executed.
 struct TRAP: Operation {
     static let opcode: Opcode = .trap
 
