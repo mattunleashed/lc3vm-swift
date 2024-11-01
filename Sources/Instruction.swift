@@ -7,22 +7,29 @@
 
 @MainActor
 struct Instruction {
+    /// The raw value of the instruction.
     let rawValue: UInt16
+
+    /// The hardware that the instruction will be executed on.
+    let hardware: Hardware
 
     var opcode: Opcode {
         try! Opcode(rawValue: rawValue >> 12)
     }
 
     var destRegister: Register {
-        try! Register(rawValue: (rawValue >> 9) & 0b111)
+        let type = try! RegisterType(rawValue: (rawValue >> 9) & 0b111)
+        return Register(type: type, hardware: hardware)
     }
 
     var srcRegister1: Register {
-        try! Register(rawValue: (rawValue >> 6) & 0b111)
+        let type = try! RegisterType(rawValue: (rawValue >> 6) & 0b111)
+        return Register(type: type, hardware: hardware)
     }
 
     var srcRegister2: Register {
-        try! Register(rawValue: rawValue & 0x7)
+        let type = try! RegisterType(rawValue: rawValue & 0x7)
+        return Register(type: type, hardware: hardware)
     }
 
     var baseRegister: Register {
@@ -61,12 +68,14 @@ struct Instruction {
         TrapCode(rawValue: rawValue & 0xFF)!
     }
 
-    init(rawValue: UInt16) {
+    init(rawValue: UInt16, hardware: Hardware) {
         self.rawValue = rawValue
+        self.hardware = hardware
     }
 }
 
 extension UInt16 {
+    /// Sign-extends the value to 16 bits.
     func signExtended(bitCount: Int) -> UInt16 {
         if (self >> (bitCount - 1)) & 1 == 1 {
             return self | (0xFFFF << bitCount)
@@ -78,23 +87,40 @@ extension UInt16 {
 
 // MARK: - Opcodes
 
+/// The LC-3 opcodes.
 enum Opcode: Int {
-    case br // branch
-    case add // add
-    case ld // load
-    case st // store
-    case jsr // jump register
-    case and // bitwise and
-    case ldr // load register
-    case str // store register
-    case rti // unused
-    case not // bitwise not
-    case ldi // load indirect
-    case sti // store indirect
-    case jmp // jump
-    case res // reserved (unused)
-    case lea // load effective address
-    case trap // execute trap
+    /// Branch
+    case br
+    /// Add
+    case add
+    /// Load
+    case ld
+    /// Store
+    case st
+    /// Jump register
+    case jsr
+    /// Bitwise and
+    case and
+    /// Load register
+    case ldr
+    /// Store register
+    case str
+    /// Return from interrupt (unused)
+    case rti
+    /// Bitwise not
+    case not
+    /// Load indirect
+    case ldi
+    /// Store indirect
+    case sti
+    /// Jump
+    case jmp
+    /// Reserved (unused)
+    case res
+    /// Load effective address
+    case lea
+    /// Trap
+    case trap
 
     init(rawValue: UInt16) throws {
         guard let opcode = Opcode(rawValue: Int(rawValue)) else {

@@ -42,9 +42,12 @@ struct ADD: Operation {
             newValue = instruction.srcRegister1.value &+ instruction.srcRegister2.value
         }
 
-        Hardware.updateRegister(instruction.destRegister, with: newValue)
+        let hardware: Hardware = instruction.hardware
 
-        Hardware.updateConditionFlag(from: instruction.destRegister)
+        // Update the destination register with the new value
+        hardware.updateRegister(instruction.destRegister.type, with: newValue)
+        // Update the condition flag based on the new value
+        hardware.updateConditionFlag(from: instruction.destRegister.type)
     }
 }
 
@@ -62,9 +65,12 @@ struct AND: Operation {
             newValue = instruction.srcRegister1.value & instruction.srcRegister2.value
         }
 
-        Hardware.updateRegister(instruction.destRegister, with: newValue)
+        let hardware: Hardware = instruction.hardware
 
-        Hardware.updateConditionFlag(from: instruction.destRegister)
+        // Update the destination register with the new value
+        hardware.updateRegister(instruction.destRegister.type, with: newValue)
+        // Update the condition flag based on the new value
+        hardware.updateConditionFlag(from: instruction.destRegister.type)
     }
 }
 
@@ -74,8 +80,12 @@ struct BR: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
-        var pc = Register.pc
-        if (instruction.conditionFlags & Register.cond.value) != 0 {
+        // Get the registers
+        var pc = Register(type: .pc, hardware: instruction.hardware)
+        let cond = Register(type: .cond, hardware: instruction.hardware)
+
+        // Check if the condition flags match
+        if (instruction.conditionFlags & cond.value) != 0 {
             pc.value &+= instruction.pcOffset9
         }
     }
@@ -87,7 +97,10 @@ struct JMP: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
-        Hardware.updateRegister(.pc, with: instruction.baseRegister.value)
+        let hardware: Hardware = instruction.hardware
+
+        // Update the program counter with the value of the base register
+        hardware.updateRegister(.pc, with: instruction.baseRegister.value)
     }
 }
 
@@ -97,9 +110,13 @@ struct JSR: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
-        Hardware.updateRegister(.r7, with: Register.pc.value)
+        let hardware: Hardware = instruction.hardware
 
-        var pc = Register.pc
+        // Update the return address
+        hardware.updateRegister(.r7, with: hardware.readRegister(.pc))
+
+        // Update the program counter
+        var pc = Register(type: .pc, hardware: hardware)
         if instruction.isPCOffset11Mode {
             pc.value &+= instruction.pcOffset11
         } else {
@@ -114,12 +131,14 @@ struct LD: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
+        let hardware = instruction.hardware
+
         var destRegister = instruction.destRegister
-        let address = Register.pc.value &+ instruction.pcOffset9
+        let address = hardware.readRegister(.pc) &+ instruction.pcOffset9
 
-        destRegister.value = Hardware.readMemory(at: address)
+        destRegister.value = hardware.readMemory(at: address)
 
-        Hardware.updateConditionFlag(from: destRegister)
+        hardware.updateConditionFlag(from: destRegister.type)
     }
 }
 
@@ -129,12 +148,17 @@ struct LDI: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
+        let hardware = instruction.hardware
+
+        // Get the destination register and the new address
         var destRegister = instruction.destRegister
-        let address = Register.pc.value &+ instruction.pcOffset9
+        let address = hardware.readRegister(.pc) &+ instruction.pcOffset9
 
-        destRegister.value = Hardware.readMemory(at: Hardware.readMemory(at: address))
+        // Read the value from the memory address stored in the memory address
+        destRegister.value = hardware.readMemory(at: hardware.readMemory(at: address))
 
-        Hardware.updateConditionFlag(from: destRegister)
+        // Update the condition flag based on the new value
+        hardware.updateConditionFlag(from: destRegister.type)
     }
 }
 
@@ -144,12 +168,17 @@ struct LDR: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
+        let hardware = instruction.hardware
+
+        // Get the destination register and the new address
         var destRegister = instruction.destRegister
         let address = instruction.baseRegister.value &+ instruction.pcOffset6
 
-        destRegister.value = Hardware.readMemory(at: address)
+        // Read the value from the memory address
+        destRegister.value = hardware.readMemory(at: address)
 
-        Hardware.updateConditionFlag(from: destRegister)
+        // Update the condition flag based on the new value
+        hardware.updateConditionFlag(from: destRegister.type)
     }
 }
 
@@ -159,10 +188,12 @@ struct LEA: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
-        var destRegister = instruction.destRegister
-        destRegister.value = Register.pc.value &+ instruction.pcOffset9
+        let hardware = instruction.hardware
 
-        Hardware.updateConditionFlag(from: destRegister)
+        var destRegister = instruction.destRegister
+        destRegister.value = hardware.readRegister(.pc) &+ instruction.pcOffset9
+
+        hardware.updateConditionFlag(from: destRegister.type)
     }
 }
 
@@ -175,7 +206,8 @@ struct NOT: Operation {
         var destRegister = instruction.destRegister
         destRegister.value = ~instruction.srcRegister1.value
 
-        Hardware.updateConditionFlag(from: destRegister)
+        let hardware = instruction.hardware
+        hardware.updateConditionFlag(from: destRegister.type)
     }
 }
 
@@ -203,8 +235,10 @@ struct ST: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
-        let address = Register.pc.value &+ instruction.pcOffset9
-        Hardware.writeMemory(at: address, with: instruction.destRegister.value)
+        let hardware = instruction.hardware
+
+        let address = hardware.readRegister(.pc) &+ instruction.pcOffset9
+        hardware.writeMemory(at: address, with: instruction.destRegister.value)
     }
 }
 
@@ -214,9 +248,13 @@ struct STI: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
-        let address1 = Register.pc.value &+ instruction.pcOffset9
-        let address2 = Hardware.readMemory(at: address1)
-        Hardware.writeMemory(at: address2, with: instruction.destRegister.value)
+        let hardware = instruction.hardware
+
+        let address1 = hardware.readRegister(.pc) &+ instruction.pcOffset9
+        let address2 = hardware.readMemory(at: address1)
+
+        // Store the value in the memory address stored in the memory address
+        hardware.writeMemory(at: address2, with: instruction.destRegister.value)
     }
 }
 
@@ -226,8 +264,11 @@ struct STR: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
+        let hardware = instruction.hardware
+
         let address = instruction.baseRegister.value &+ instruction.pcOffset6
-        Hardware.writeMemory(at: address, with: instruction.destRegister.value)
+        // Store the register value in the memory address
+        hardware.writeMemory(at: address, with: instruction.destRegister.value)
     }
 }
 
@@ -237,40 +278,45 @@ struct TRAP: Operation {
     static func execute(_ instruction: Instruction) throws {
         try validateOpcode(of: instruction)
 
-        Hardware.updateRegister(.r7, with: Register.pc.value)
+        let hardware = instruction.hardware
+
+        // Save the return address
+        hardware.updateRegister(.r7, with: hardware.readRegister(.pc))
 
         switch instruction.trapCode {
         case .getc:
-            getc()
+            getc(on: hardware)
         case .out:
-            out()
+            out(on: hardware)
         case .puts:
-            puts()
+            puts(on: hardware)
         case .in:
-            self.in()
+            self.in(on: hardware)
         case .putsp:
-            putsp()
+            putsp(on: hardware)
         case .halt:
-            halt()
+            halt(on: hardware)
         }
     }
 
-    private static func getc() {
-        Hardware.updateRegister(.r0, with: UInt16(getchar()))
-        Hardware.updateConditionFlag(from: .r0)
+    private static func getc(on hardware: Hardware) {
+        hardware.updateRegister(.r0, with: UInt16(getchar()))
+        hardware.updateConditionFlag(from: .r0)
     }
 
-    private static func out() {
-        putc(Int32(Register.r0.value), stdout)
+    private static func out(on hardware: Hardware) {
+        let r0 = Register(type: .r0, hardware: hardware)
+
+        putc(Int32(r0.value), stdout)
         fflush(stdout)
     }
 
-    private static func puts() {
-        var address = Register.r0.value
+    private static func puts(on hardware: Hardware) {
+        var address = hardware.readRegister(.r0)
         var value: UInt16
 
         repeat {
-            value = Hardware.readMemory(at: address)
+            value = hardware.readMemory(at: address)
             putc(Int32(value), stdout)
 
             address += 1
@@ -279,23 +325,23 @@ struct TRAP: Operation {
         fflush(stdout)
     }
 
-    private static func `in`() {
+    private static func `in`(on hardware: Hardware) {
         print("Enter a character: ", terminator: "")
         let char = getchar()
 
         putc(char, stdout)
         fflush(stdout)
 
-        Hardware.updateRegister(.r0, with: UInt16(char))
-        Hardware.updateConditionFlag(from: .r0)
+        hardware.updateRegister(.r0, with: UInt16(char))
+        hardware.updateConditionFlag(from: .r0)
     }
 
-    private static func putsp() {
-        var address = Register.r0.value
+    private static func putsp(on hardware: Hardware) {
+        var address = hardware.readRegister(.r0)
         var value: UInt16
 
         repeat {
-            value = Hardware.readMemory(at: address)
+            value = hardware.readMemory(at: address)
 
             let char1 = value & 0xFF
             putc(Int32(char1), stdout)
@@ -311,10 +357,12 @@ struct TRAP: Operation {
         fflush(stdout)
     }
 
-    private static func halt() {
+    private static func halt(on hardware: Hardware) {
         _stdio.puts("HALT")
         fflush(stdout)
 
-        Hardware.isRunning = false
+        // Shutdown the hardware
+        let hardware = hardware
+        hardware.isRunning = false
     }
 }

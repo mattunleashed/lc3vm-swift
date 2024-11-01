@@ -8,5 +8,5 @@
 import Testing
 
 extension Tag {
-    @Tag static var instruction: Self
+    @Tag static var operation: Self
 }

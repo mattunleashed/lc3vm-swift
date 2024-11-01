@@ -17,22 +17,24 @@ struct LC3VM: AsyncParsableCommand {
     var binary: URL
 
     func run() async throws {
+        let hardware = Hardware()
+
         // Read the binary file and load it into memory
-        try Hardware.readImage(binary)
+        try hardware.readImage(binary)
 
         signal(SIGINT) { handle_interrupt($0) }
         disable_input_buffering()
 
         // Set condition register to zero which value is 010 (not 000)
-        Hardware.updateConditionFlag(to: .zro)
+        hardware.updateConditionFlag(to: .zro)
 
         // Set the program counter to the default starting location
-        Hardware.updateRegister(.pc, with: Constant.pcStart)
+        hardware.updateRegister(.pc, with: Constant.pcStart)
 
-        Hardware.isRunning = true
+        hardware.isRunning = true
 
-        while Hardware.isRunning {
-            let instruction = Hardware.readNextInstruction()
+        while hardware.isRunning {
+            let instruction = hardware.readNextInstruction()
 
             switch instruction.opcode {
             case .br:
