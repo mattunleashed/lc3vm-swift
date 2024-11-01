@@ -23,7 +23,7 @@ This project provides an implementation of the LC-3 virtual machine in Swift. It
 ## Running LC3VM
 
 To run an LC-3 binary file using the LC3VM executable, use the following command:
-```swift
+```bash
 swift run LC3VM /path/to/your/lc3/binary/file.obj
 ```
 
@@ -31,7 +31,7 @@ This will load the specified binary file into the LC-3 virtual machine and start
 
 ### Example Programs
 You can find example LC-3 assembly programs in the `Programs` directory. To run one of these programs, use the following command:
-```swift
+```bash
 swift run LC3VM Programs/<program_name>.obj
 ```
 
