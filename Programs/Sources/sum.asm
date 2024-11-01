@@ -1,0 +1,19 @@
+.ORIG x3000
+LD R0, VALUE
+LOOP ADD R1, R1, R0
+ADD R0, R0, #-1
+BRp LOOP
+ST R1, SUM
+
+LD R0, SUM ; print the sum as character
+OUT
+
+LD R0, BRK ; \n character
+OUT
+
+HALT
+
+VALUE .FILL 12
+SUM .BLKW 1
+BRK .FILL 10
+.END
