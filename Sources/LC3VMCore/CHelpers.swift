@@ -13,7 +13,7 @@ import Foundation
 var original_tio = termios()
 
 @MainActor
-func disable_input_buffering() {
+public func disable_input_buffering() {
     tcgetattr(STDIN_FILENO, &original_tio)
     var new_tio = original_tio
     new_tio.c_lflag = UInt(Int32(new_tio.c_lflag) & ~ICANON & ~ECHO)
@@ -21,12 +21,12 @@ func disable_input_buffering() {
 }
 
 @MainActor
-func restore_input_buffering() {
+public func restore_input_buffering() {
     tcsetattr(STDIN_FILENO, TCSANOW, &original_tio)
 }
 
 @MainActor
-func handle_interrupt(_: Int32) {
+public func handle_interrupt(_: Int32) {
     restore_input_buffering()
     print("")
     exit(-2)

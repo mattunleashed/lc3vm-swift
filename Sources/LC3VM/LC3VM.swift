@@ -1,5 +1,5 @@
 //
-//  lc3vm.swift
+//  LC3VM.swift
 //  lc3vm
 //
 //  Created by İbrahim Çetin on 9.10.2024.
@@ -7,6 +7,7 @@
 
 import ArgumentParser
 import Foundation
+import LC3VMCore
 
 /// The LC-3 virtual machine.
 @main
@@ -17,26 +18,24 @@ struct LC3VM: AsyncParsableCommand {
     var binary: URL
 
     func run() async throws {
+        // Create the LC-3 hardware
         let hardware = Hardware()
 
         // Read the binary file and load it into memory
         try hardware.readImage(binary)
 
+        // Set up the signal handler
         signal(SIGINT) { handle_interrupt($0) }
+        // Disable input buffering
         disable_input_buffering()
 
-        // Set condition register to zero which value is 010 (not 000)
-        hardware.updateConditionFlag(to: .zro)
-
-        // Set the program counter to the default starting location
-        hardware.updateRegister(.pc, with: Constant.pcStart)
-
+        // Start the LC-3 machine
         hardware.isRunning = true
 
         while hardware.isRunning {
             let instruction = hardware.readNextInstruction()
 
-            switch instruction.opcode {
+            switch try instruction.opcode {
             case .br:
                 try BR.execute(instruction)
             case .add:
@@ -72,22 +71,7 @@ struct LC3VM: AsyncParsableCommand {
             }
         }
 
+        // Restore input buffering
         restore_input_buffering()
     }
-}
-
-/// The error type for the LC3 virtual machine.
-enum LC3VMError: Error {
-    case badOpcode
-    case invalidInstruction
-    case invalidRegister
-    case invalidOpcode
-    case unableToReadImageFile
-}
-
-/// The LC-3 constant values.
-enum Constant {
-    static let memorySize = 1 << 16
-    static let registerCount = 10
-    static let pcStart: UInt16 = 0x3000 // Default program counter location
 }

@@ -11,60 +11,60 @@ import Foundation
 
 /// The LC-3 hardware.
 @MainActor
-class Hardware {
+public class Hardware {
     /// The memory of the LC-3 machine. It is an array of 65536 16-bit values.
     /// 128KB of memory.
-    private(set) var memory = [UInt16](repeating: 0, count: Constant.memorySize)
+    public private(set) var memory = [UInt16](repeating: 0, count: Constant.memorySize)
 
     /// 8 general-purpose registers, each 16 bits wide (0-7) and a program counter (PC) register.
     /// The condition flag register(COND) is also stored in the register array.
-    private(set) var registers = [UInt16](repeating: 0, count: Constant.registerCount)
+    public private(set) var registers = [UInt16](repeating: 0, count: Constant.registerCount)
 
     /// Indicates whether the hardware is running or not.
-    var isRunning = false
+    public var isRunning = false
 
     /// Updates the value of a register.
     ///
     /// - Parameters:
-    ///   - register: The register to update.
+    ///   - registerType: The register to update.
     ///   - value: The new value of the register.
     ///
     /// - SeeAlso: ``Register``
-    func updateRegister(_ registerType: RegisterType, with value: UInt16) {
+    public func updateRegister(_ registerType: RegisterType, with value: UInt16) {
         registers[registerType.rawValue] = value
     }
 
     /// Reads the value of a register.
     ///
-    /// - Parameter register: The register to read the value from.
+    /// - Parameter registerType: The register to read the value from.
     ///
     /// - Returns: The value of the register.
     ///
     /// - Tip: You can also use ``Register/value`` to read the value of a register.
-    func readRegister(_ registerType: RegisterType) -> UInt16 {
+    public func readRegister(_ registerType: RegisterType) -> UInt16 {
         return registers[registerType.rawValue]
     }
 
     /// Reads the condition flag.
     ///
     /// - Returns: The condition flag.
-    func readConditionFlag() -> ConditionFlag {
+    public func readConditionFlag() -> ConditionFlag {
         ConditionFlag(rawValue: Register(type: .cond, hardware: self).value)!
     }
 
     /// Updates the condition flag to a new value.
     ///
     /// - Parameter value: The new value of the condition flag.
-    func updateConditionFlag(to value: ConditionFlag) {
+    public func updateConditionFlag(to value: ConditionFlag) {
         updateRegister(.cond, with: value.rawValue)
     }
 
     /// Updates the condition flag based on the value of a register.
     ///
-    /// - Parameter register: The register to read the value from.
+    /// - Parameter registerType: The register to read the value from.
     ///
     /// - SeeAlso: ``ConditionFlag``
-    func updateConditionFlag(from registerType: RegisterType) {
+    public func updateConditionFlag(from registerType: RegisterType) {
         let value = readRegister(registerType)
 
         let condition: ConditionFlag = if value == 0 {
@@ -81,7 +81,7 @@ class Hardware {
     /// Reads a value from memory at a given address.
     ///
     /// - Parameter address: The address to read the value from.
-    func readMemory(at address: UInt16) -> UInt16 {
+    public func readMemory(at address: UInt16) -> UInt16 {
         if address == MemoryRegister.kbsr.rawValue {
             if check_key() {
                 writeMemory(at: MemoryRegister.kbsr.rawValue, with: 1 << 15)
@@ -99,14 +99,14 @@ class Hardware {
     /// - Parameters:
     ///   - address: The address to write the value to.
     ///   - value: The value to write to memory.
-    func writeMemory(at address: UInt16, with value: UInt16) {
+    public func writeMemory(at address: UInt16, with value: UInt16) {
         memory[Int(address)] = value
     }
 
     /// Reads the next instruction from memory.
     ///
     /// - Returns: The next instruction.
-    func readNextInstruction() -> Instruction {
+    public func readNextInstruction() -> Instruction {
         var programCounter = Register(type: .pc, hardware: self)
 
         let instruction = readMemory(at: programCounter.value)
@@ -118,7 +118,7 @@ class Hardware {
     /// Reads the image file and loads it into memory.
     ///
     /// - Parameter path: The path to the image file.
-    func readImage(_ path: URL) throws {
+    public func readImage(_ path: URL) throws {
         guard let file = fopen(path.path, "rb") else {
             throw LC3VMError.unableToReadImageFile
         }
@@ -150,20 +150,31 @@ class Hardware {
             }
         }
     }
+
+    /// Initializes the LC-3 hardware.
+    ///
+    /// - Note: Sets the condition register to zero and the program counter to the default starting location.
+    public init() {
+        // Set condition register to zero which value is 010 (not 000)
+        updateConditionFlag(to: .zro)
+
+        // Set the program counter to the default starting location
+        updateRegister(.pc, with: Constant.pcStart)
+    }
 }
 
 // MARK: - LC-3 Register
 
 /// The LC-3 registers.
 @MainActor
-struct Register {
+public struct Register {
     /// The register type.
-    let type: RegisterType
+    public let type: RegisterType
 
     /// The hardware that the register belongs to.
-    private(set) var hardware: Hardware
+    public private(set) var hardware: Hardware
 
-    init(type: RegisterType, hardware: Hardware) {
+    public init(type: RegisterType, hardware: Hardware) {
         self.type = type
         self.hardware = hardware
     }
@@ -173,7 +184,7 @@ struct Register {
     /// This is a shorthand for reading or writing the value of a register.
     /// - Note: You can use this property to read or write the value of a register.
     /// - SeeAlso: ``Hardware/updateRegister(_:with:)`` and ``Hardware/readRegister(_:)``.
-    var value: UInt16 {
+    public var value: UInt16 {
         get {
             hardware.readRegister(type)
         }
@@ -185,7 +196,7 @@ struct Register {
 }
 
 /// The register type.
-enum RegisterType: Int {
+public enum RegisterType: Int {
     /// General-purpose register.
     case r0, r1, r2, r3, r4, r5, r6, r7
     /// Program counter.
@@ -193,7 +204,7 @@ enum RegisterType: Int {
     /// Condition flag register.
     case cond
 
-    init(rawValue: UInt16) throws {
+    public init(rawValue: UInt16) throws {
         guard let register = Self(rawValue: Int(rawValue)) else {
             throw LC3VMError.invalidRegister
         }
@@ -203,7 +214,7 @@ enum RegisterType: Int {
 }
 
 /// The LC-3 memory registers.
-enum MemoryRegister: UInt16 {
+public enum MemoryRegister: UInt16 {
     /// Keyboard status.
     case kbsr = 0xFE00
     /// Keyboard data.
@@ -211,11 +222,37 @@ enum MemoryRegister: UInt16 {
 }
 
 /// The condition flags.
-enum ConditionFlag: UInt16 {
+public enum ConditionFlag: UInt16 {
     /// Positive
     case pos = 0b001
     /// Zero
     case zro = 0b010
     /// Negative
     case neg = 0b100
+}
+
+// MARK: - Constants
+
+/// The LC-3 VM errors.
+public enum LC3VMError: Error {
+    /// The instruction is invalid.
+    case invalidInstruction
+    /// The register is invalid.
+    case invalidRegister
+    /// The opcode is invalid.
+    case invalidOpcode
+    /// Unable to read the image file.
+    case unableToReadImageFile
+}
+
+/// The LC-3 constant values.
+public enum Constant {
+    /// The maximum size of the memory.
+    public static let memorySize = 1 << 16
+
+    /// The number of registers.
+    public static let registerCount = 10
+
+    /// The default starting location of the program counter.
+    public static let pcStart: UInt16 = 0x3000
 }

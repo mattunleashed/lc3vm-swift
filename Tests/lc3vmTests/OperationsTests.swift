@@ -5,7 +5,7 @@
 //  Created by İbrahim Çetin on 9.10.2024.
 //
 
-@testable import lc3vm
+import LC3VMCore
 import Testing
 
 // swiftformat:disable numberFormatting
@@ -37,7 +37,7 @@ struct OperationsTests {
 
         try ADD.execute(instruction)
 
-        #expect(instruction.destRegister.value == expectedValue)
+        #expect(try instruction.destRegister.value == expectedValue)
     }
 
     @Test(
@@ -53,7 +53,7 @@ struct OperationsTests {
 
         try AND.execute(instruction)
 
-        #expect(instruction.destRegister.value == expectedValue)
+        #expect(try instruction.destRegister.value == expectedValue)
     }
 
     @Test(
@@ -123,7 +123,7 @@ struct OperationsTests {
         try LD.execute(instruction)
 
         // Check if the value of the destination register is equal to the expected value
-        #expect(instruction.destRegister.value == expectedValue)
+        #expect(try instruction.destRegister.value == expectedValue)
     }
 
     @Test(
@@ -147,7 +147,7 @@ struct OperationsTests {
         try LDI.execute(instruction)
 
         // Check if the value of the destination register is equal to the expected value
-        #expect(instruction.destRegister.value == expectedValue)
+        #expect(try instruction.destRegister.value == expectedValue)
     }
 
     @Test(
@@ -163,13 +163,13 @@ struct OperationsTests {
         let instruction = Instruction(rawValue: instruction, hardware: hardware)
 
         // Set the value of the memory address to the expected value
-        hardware.writeMemory(at: instruction.baseRegister.value &+ instruction.pcOffset6, with: expectedValue)
+        try hardware.writeMemory(at: instruction.baseRegister.value &+ instruction.pcOffset6, with: expectedValue)
 
         // Execute the instruction
         try LDR.execute(instruction)
 
         // Check if the value of the destination register is equal to the expected value
-        #expect(instruction.destRegister.value == expectedValue)
+        #expect(try instruction.destRegister.value == expectedValue)
     }
 
     @Test(
@@ -188,7 +188,7 @@ struct OperationsTests {
         try LEA.execute(instruction)
 
         // Check if the value of the destination register is equal to the expected value
-        #expect(instruction.destRegister.value == expectedAddress)
+        #expect(try instruction.destRegister.value == expectedAddress)
     }
 
     @Test(
@@ -204,13 +204,13 @@ struct OperationsTests {
         let instruction = Instruction(rawValue: instruction, hardware: hardware)
 
         // Calculate the expected value
-        let expectedValue = ~instruction.srcRegister1.value
+        let expectedValue = try ~instruction.srcRegister1.value
 
         // Execute the instruction
         try NOT.execute(instruction)
 
         // Check if the value of the destination register is equal to the expected value
-        #expect(instruction.destRegister.value == expectedValue)
+        #expect(try instruction.destRegister.value == expectedValue)
     }
 
     @Test(
@@ -251,7 +251,7 @@ struct OperationsTests {
         try STI.execute(instruction)
 
         // Check if the value of the memory address is equal to the expected value
-        #expect(hardware.readMemory(at: containerAddress) == instruction.destRegister.value)
+        #expect(try hardware.readMemory(at: containerAddress) == (instruction.srcRegister.value))
     }
 
     @Test(
@@ -270,7 +270,7 @@ struct OperationsTests {
         try STR.execute(instruction)
 
         // Calculate the memory address to store the value
-        let address = instruction.baseRegister.value &+ instruction.pcOffset6
+        let address = try instruction.baseRegister.value &+ instruction.pcOffset6
 
         // Check if the value of the memory address is equal to the expected value
         #expect(hardware.readMemory(at: address) == expectedValue)
