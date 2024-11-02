@@ -172,7 +172,7 @@ public struct Register {
     public let type: RegisterType
 
     /// The hardware that the register belongs to.
-    public private(set) var hardware: Hardware
+    public let hardware: Hardware
 
     public init(type: RegisterType, hardware: Hardware) {
         self.type = type
