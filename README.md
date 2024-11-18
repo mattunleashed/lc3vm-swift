@@ -29,6 +29,13 @@ swift run LC3VM /path/to/your/lc3/binary/file.obj
 
 This will load the specified binary file into the LC-3 virtual machine and start execution.
 
+You can also change the architectures, etc by using commands like:
+```
+xcrun swift build -c release --arch arm64 --arch x86_64 LC3VM
+
+lipo -info .build/apple/Products/Release/LC3VM
+```
+
 ### Example Programs
 You can find example LC-3 assembly programs in the `Programs` directory. To run one of these programs, use the following command:
 ```bash
